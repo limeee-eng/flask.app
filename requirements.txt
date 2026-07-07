@@ -1,0 +1,5 @@
+# 依赖清单
+Flask>=3.0
+Werkzeug>=3.0          # 内置密码哈希
+flask-wtf>=1.2         # CSRF 保护（可选，推荐安装）
+flask-limiter>=3.5     # 速率限制（可选，推荐安装）
