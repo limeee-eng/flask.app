@@ -1,4 +1,4 @@
-/* ===== 全局 Reset ===== */
+/* 全局重置 */
 * {
     margin: 0;
     padding: 0;
@@ -6,193 +6,272 @@
 }
 
 body {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    background-color: #f0f2f5;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background-color: #f5f7fa;
     min-height: 100vh;
     color: #333;
 }
 
-/* ===== 导航栏 ===== */
 .navbar {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 0 30px;
-    height: 60px;
-    background: linear-gradient(135deg, #667eea, #764ba2);
+    padding: 0 24px;
+    height: 56px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.navbar-brand {
     color: #fff;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
-}
-
-.nav-left {
-    display: flex;
-    align-items: center;
-}
-
-.brand {
     font-size: 20px;
     font-weight: 700;
     letter-spacing: 1px;
+    text-decoration: none;
 }
 
-.nav-right {
+.navbar-menu {
     display: flex;
     align-items: center;
-    gap: 20px;
+    gap: 16px;
+    list-style: none;
 }
 
-.nav-welcome {
-    font-size: 14px;
-    opacity: 0.9;
+.navbar-menu li {
+    display: inline;
 }
 
-.nav-link {
-    color: #fff;
+.navbar-link {
+    color: rgba(255, 255, 255, 0.9);
     text-decoration: none;
     font-size: 14px;
     font-weight: 500;
-    padding: 6px 16px;
-    border: 1px solid rgba(255, 255, 255, 0.5);
+    padding: 6px 12px;
     border-radius: 4px;
     transition: background 0.2s;
 }
 
-.nav-link:hover {
+.navbar-link:hover {
     background: rgba(255, 255, 255, 0.15);
+    color: #fff;
 }
 
-/* ===== 主容器 ===== */
-.container {
-    max-width: 600px;
-    margin: 50px auto;
+.navbar-welcome {
+    color: rgba(255, 255, 255, 0.85);
+    font-size: 14px;
+}
+
+.main-container {
+    max-width: 800px;
+    margin: 40px auto;
     padding: 0 20px;
 }
 
-/* ===== 卡片 ===== */
 .card {
     background: #fff;
     border-radius: 12px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-    padding: 40px;
-    margin-bottom: 30px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+    padding: 32px;
+    margin-bottom: 24px;
 }
 
-.card h2 {
+.card-title {
     font-size: 24px;
-    margin-bottom: 20px;
+    font-weight: 600;
+    margin-bottom: 24px;
     color: #333;
+    text-align: center;
 }
 
-.card p {
-    font-size: 15px;
-    color: #666;
-    margin-bottom: 20px;
-    line-height: 1.6;
-}
-
-/* ===== 登录卡片 ===== */
-.login-card {
-    max-width: 420px;
-    margin: 0 auto;
-}
-
-/* ===== 表单 ===== */
 .form-group {
     margin-bottom: 20px;
 }
 
-.form-group label {
+.form-label {
     display: block;
     font-size: 14px;
-    font-weight: 500;
+    font-weight: 600;
     color: #555;
     margin-bottom: 6px;
 }
 
-.form-group input {
+.form-input {
     width: 100%;
     padding: 10px 14px;
-    border: 1px solid #d9d9d9;
+    border: 1px solid #d1d5db;
     border-radius: 6px;
     font-size: 14px;
+    color: #333;
+    transition: border-color 0.2s, box-shadow 0.2s;
     outline: none;
-    transition: border-color 0.2s;
 }
 
-.form-group input:focus {
+.form-input:focus {
     border-color: #667eea;
-    box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.2);
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.15);
 }
 
-.error-msg {
-    color: #e74c3c;
-    font-size: 14px;
-    margin-bottom: 15px;
-    padding: 8px 12px;
-    background: #fef0ef;
-    border-radius: 4px;
-}
-
-/* ===== 按钮 ===== */
 .btn {
     display: inline-block;
-    padding: 10px 28px;
-    font-size: 15px;
-    font-weight: 500;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-    text-decoration: none;
-    text-align: center;
-    transition: background 0.2s;
-}
-
-.btn-primary {
+    padding: 10px 24px;
     background: #667eea;
     color: #fff;
+    border: none;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: none;
+    transition: background 0.2s, transform 0.1s;
 }
 
-.btn-primary:hover {
+.btn:hover {
     background: #5a6fd6;
 }
 
+.btn:active {
+    transform: scale(0.98);
+}
+
+.btn-block {
+    display: block;
+    width: 100%;
+}
+
 .btn-secondary {
-    background: #e0e0e0;
-    color: #333;
+    background: #6b7280;
 }
 
 .btn-secondary:hover {
-    background: #d0d0d0;
+    background: #5a606d;
 }
 
-.login-form .btn-primary {
-    width: 100%;
-    padding: 12px;
-    font-size: 16px;
+.btn-danger {
+    background: #ef4444;
 }
 
-/* ===== 用户信息列表 ===== */
-.user-info {
-    margin-bottom: 25px;
+.btn-danger:hover {
+    background: #dc2626;
 }
 
 .info-list {
     list-style: none;
+    margin-top: 16px;
 }
 
 .info-list li {
-    padding: 10px 0;
+    padding: 12px 16px;
     border-bottom: 1px solid #f0f0f0;
     font-size: 15px;
+    display: flex;
+    justify-content: space-between;
 }
 
 .info-list li:last-child {
     border-bottom: none;
 }
 
-.label {
-    display: inline-block;
-    width: 80px;
-    color: #888;
-    font-weight: 500;
+.info-label {
+    font-weight: 600;
+    color: #555;
+}
+
+.info-value {
+    color: #333;
+    font-family: "Courier New", monospace;
+    background: #f9fafb;
+    padding: 2px 8px;
+    border-radius: 4px;
+}
+
+.alert {
+    padding: 12px 16px;
+    border-radius: 6px;
+    margin-bottom: 20px;
+    font-size: 14px;
+}
+
+.alert-error {
+    background: #fef2f2;
+    color: #dc2626;
+    border: 1px solid #fecaca;
+}
+
+.alert-success {
+    background: #f0fdf4;
+    color: #16a34a;
+    border: 1px solid #bbf7d0;
+}
+
+.welcome-text {
+    font-size: 22px;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 8px;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: #999;
+}
+
+.empty-state p {
+    font-size: 16px;
+    margin-bottom: 20px;
+}
+
+.actions {
+    margin-top: 24px;
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+}
+
+.table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 16px;
+}
+
+.table th,
+.table td {
+    padding: 10px 14px;
+    text-align: left;
+    border-bottom: 1px solid #f0f0f0;
+    font-size: 14px;
+}
+
+.table th {
+    background: #f9fafb;
+    font-weight: 600;
+    color: #555;
+}
+
+.table tr:hover td {
+    background: #f9fafb;
+}
+
+.search-section {
+    margin-bottom: 20px;
+}
+
+.search-row {
+    display: flex;
+    gap: 12px;
+}
+
+.search-input {
+    flex: 1;
+    padding: 10px 14px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    font-size: 14px;
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+.search-input:focus {
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.15);
 }

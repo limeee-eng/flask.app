@@ -8,21 +8,18 @@
 </head>
 <body>
     <nav class="navbar">
-        <div class="nav-left">
-            <span class="brand">用户管理系统</span>
-        </div>
-        <div class="nav-right">
+        <a href="/" class="navbar-brand">用户管理系统</a>
+        <ul class="navbar-menu">
             {% if session.get('username') %}
-                {# V11 FIX: | e 显式转义 #}
-                <span class="nav-welcome">欢迎，{{ session['username'] | e }}</span>
-                <a href="/logout" class="nav-link">退出</a>
+                <li><span class="navbar-welcome">欢迎，{{ session['username'] | e }}</span></li>
+                <li><a href="/logout" class="navbar-link">退出</a></li>
             {% else %}
-                <a href="/login" class="nav-link">登录</a>
+                <li><a href="/login" class="navbar-link">登录</a></li>
+                <li><a href="/register" class="navbar-link">注册</a></li>
             {% endif %}
-        </div>
+        </ul>
     </nav>
-
-    <main class="container">
+    <main class="main-container">
         {% block content %}{% endblock %}
     </main>
 </body>
