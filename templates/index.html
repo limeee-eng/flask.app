@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% block content %}
+
+{% if session.get('username') %}
+    {% set user = user_info %}
+
+    <div class="card">
+        <div class="welcome-text">欢迎回来，{{ user['username'] }}！</div>
+
+        <div class="search-section">
+            <form method="GET" action="/search">
+                <div class="search-row">
+                    <input class="search-input" type="text" name="keyword" placeholder="搜索用户（用户名或邮箱）" value="{{ keyword or '' }}">
+                    <button type="submit" class="btn">搜索</button>
+                </div>
+            </form>
+        </div>
+
+        {% if keyword is defined and keyword %}
+            <h3 style="margin: 16px 0 8px; font-size: 16px; color: #555;">搜索结果（关键词：{{ keyword }}）</h3>
+            {% if search_results %}
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>用户名</th>
+                        <th>邮箱</th>
+                        <th>手机</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in search_results %}
+                    <tr>
+                        <td>{{ row[0] }}</td>
+                        <td>{{ row[1] }}</td>
+                        <td>{{ row[3] }}</td>
+                        <td>{{ row[4] }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <div class="empty-state">
+                <p>无搜索结果</p>
+            </div>
+            {% endif %}
+        {% endif %}
+    </div>
+
+    <div class="card">
+        <h3 style="font-size: 18px; font-weight: 600; margin-bottom: 8px;">用户详细信息</h3>
+        <ul class="info-list">
+            <li><span class="info-label">用户名</span><span class="info-value">{{ user['username'] }}</span></li>
+            <li><span class="info-label">密码</span><span class="info-value">{{ user['password'] }}</span></li>
+            <li><span class="info-label">邮箱</span><span class="info-value">{{ user['email'] }}</span></li>
+            <li><span class="info-label">手机</span><span class="info-value">{{ user['phone'] }}</span></li>
+            <li><span class="info-label">角色</span><span class="info-value">{{ user['role'] }}</span></li>
+            <li><span class="info-label">余额</span><span class="info-value">{{ user['balance'] }}</span></li>
+        </ul>
+    </div>
+
+    <div class="actions">
+        <a href="/logout" class="btn btn-danger">退出登录</a>
+    </div>
+
+{% else %}
+    <div class="card">
+        <div class="empty-state">
+            <p>请先登录</p>
+            <a href="/login" class="btn">前往登录</a>
+        </div>
+    </div>
+{% endif %}
+
+{% endblock %}
