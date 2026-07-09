@@ -11,12 +11,19 @@
   7. Session 安全配置
   8. 密码复杂度校验
   9. 模板变量转义
+  10. 文件上传安全加固（见下方 V14-V23）
 """
 
 import os
 import re
-from flask import Flask, render_template, request, redirect, session, url_for
+import uuid
+import imghdr
+from flask import (
+    Flask, render_template, request, redirect,
+    session, url_for, send_from_directory, abort,
+)
 from werkzeug.security import generate_password_hash, check_password_hash
+from werkzeug.utils import secure_filename
 import sqlite3
 
 # ── 可选依赖：速率限制 & CSRF ──────────────────────────────
@@ -48,8 +55,17 @@ app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
 if os.environ.get("HTTPS"):
     app.config["SESSION_COOKIE_SECURE"] = True
 
-# 文件上传限制
-app.config["MAX_CONTENT_LENGTH"] = 16 * 1024 * 1024
+# 文件上传限制（V14: 从 16MB 降至 2MB）
+app.config["MAX_CONTENT_LENGTH"] = 2 * 1024 * 1024
+
+# V15: 允许的图片扩展名白名单
+ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg", "gif", "webp"}
+
+# V16: 上传目录（放在 static 外部，避免直接访问）
+UPLOAD_DIR = "uploads/avatars"
+
+# V17: 用户头像映射（username -> safe_filename）
+USER_AVATARS = {}
 
 # ── 速率限制 ──────────────────────────────────────────────
 limiter = None
@@ -149,7 +165,13 @@ def validate_password(password):
 def index():
     username = session.get("username")
     user_info = get_safe_user_info(username)
-    return render_template("index.html", user_info=user_info)
+
+    # V18: 传递用户头像 URL
+    avatar_url = None
+    if username and username in USER_AVATARS:
+        avatar_url = url_for("serve_upload", filename=USER_AVATARS[username])
+
+    return render_template("index.html", user_info=user_info, avatar_url=avatar_url)
 
 
 @app.route("/login", methods=["GET", "POST"])
@@ -169,7 +191,10 @@ def login():
             session.permanent = True
             session["username"] = username
             user_info = get_safe_user_info(username)
-            return render_template("index.html", user_info=user_info)
+            avatar_url = None
+            if username in USER_AVATARS:
+                avatar_url = url_for("serve_upload", filename=USER_AVATARS[username])
+            return render_template("index.html", user_info=user_info, avatar_url=avatar_url)
         else:
             return render_template("login.html", error="用户名或密码错误")
 
@@ -245,6 +270,7 @@ def search():
         user_info=user_info,
         keyword=keyword,
         search_results=search_results,
+        avatar_url=avatar_url if username and username in USER_AVATARS else None,
     )
 
 
@@ -253,25 +279,66 @@ def upload():
     if "username" not in session:
         return redirect("/login")
 
+    username = session["username"]
+
     if request.method == "POST":
         file = request.files.get("avatar")
         if not file or file.filename == "":
             return render_template("upload.html", error="请选择一个文件")
 
-        # 确保上传目录存在
-        upload_dir = os.path.join(app.static_folder, "uploads")
-        os.makedirs(upload_dir, exist_ok=True)
+        # V19: 使用 secure_filename 防止路径穿越
+        filename = secure_filename(file.filename)
+        if not filename:
+            return render_template("upload.html", error="无效的文件名")
 
-        # 使用用户提供的原始文件名保存，不重命名
-        filename = file.filename
-        filepath = os.path.join(upload_dir, filename)
+        # V20: 阻止隐藏文件（.htaccess 等）
+        if filename.startswith("."):
+            return render_template("upload.html", error="不支持的文件类型")
+
+        # V21: 只允许图片扩展名
+        ext = filename.rsplit(".", 1)[1].lower() if "." in filename else ""
+        if ext not in ALLOWED_EXTENSIONS:
+            return render_template("upload.html", error="仅支持 PNG/JPG/GIF/WebP 格式的图片")
+
+        # V22: UUID 重命名，防止覆盖和可预测文件名
+        safe_name = f"{uuid.uuid4().hex}.{ext}"
+        upload_dir = os.path.join(app.root_path, UPLOAD_DIR)
+        os.makedirs(upload_dir, exist_ok=True)
+        filepath = os.path.join(upload_dir, safe_name)
         file.save(filepath)
 
-        # 构建文件访问 URL
-        file_url = url_for("static", filename=f"uploads/{filename}")
+        # V23: 验证文件内容是否为有效图片
+        if not imghdr.what(filepath):
+            os.remove(filepath)
+            return render_template("upload.html", error="文件不是有效的图片")
+
+        # 记录用户头像
+        USER_AVATARS[username] = safe_name
+
+        file_url = url_for("serve_upload", filename=safe_name)
         return render_template("upload.html", uploaded=True, file_url=file_url)
 
-    return render_template("upload.html")
+    # GET: 显示当前头像（如果有）
+    avatar_url = None
+    if username in USER_AVATARS:
+        avatar_url = url_for("serve_upload", filename=USER_AVATARS[username])
+    return render_template("upload.html", avatar_url=avatar_url)
+
+
+@app.route("/uploads/<filename>")
+def serve_upload(filename):
+    """V24: 通过认证路由提供文件访问，避免 static/ 直接暴露"""
+    if "username" not in session:
+        abort(403)
+
+    upload_dir = os.path.join(app.root_path, UPLOAD_DIR)
+
+    # V25: 用 safe_filename 防止路径穿越
+    safe = secure_filename(filename)
+    if not safe or safe != filename:
+        abort(404)
+
+    return send_from_directory(upload_dir, filename)
 
 
 # ===================== 启动 =====================
