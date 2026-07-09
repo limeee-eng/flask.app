@@ -15,7 +15,7 @@
 
 import os
 import re
-from flask import Flask, render_template, request, redirect, session
+from flask import Flask, render_template, request, redirect, session, url_for
 from werkzeug.security import generate_password_hash, check_password_hash
 import sqlite3
 
@@ -47,6 +47,9 @@ app.config["SESSION_COOKIE_HTTPONLY"] = True
 app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
 if os.environ.get("HTTPS"):
     app.config["SESSION_COOKIE_SECURE"] = True
+
+# 文件上传限制
+app.config["MAX_CONTENT_LENGTH"] = 16 * 1024 * 1024
 
 # ── 速率限制 ──────────────────────────────────────────────
 limiter = None
@@ -243,6 +246,32 @@ def search():
         keyword=keyword,
         search_results=search_results,
     )
+
+
+@app.route("/upload", methods=["GET", "POST"])
+def upload():
+    if "username" not in session:
+        return redirect("/login")
+
+    if request.method == "POST":
+        file = request.files.get("avatar")
+        if not file or file.filename == "":
+            return render_template("upload.html", error="请选择一个文件")
+
+        # 确保上传目录存在
+        upload_dir = os.path.join(app.static_folder, "uploads")
+        os.makedirs(upload_dir, exist_ok=True)
+
+        # 使用用户提供的原始文件名保存，不重命名
+        filename = file.filename
+        filepath = os.path.join(upload_dir, filename)
+        file.save(filepath)
+
+        # 构建文件访问 URL
+        file_url = url_for("static", filename=f"uploads/{filename}")
+        return render_template("upload.html", uploaded=True, file_url=file_url)
+
+    return render_template("upload.html")
 
 
 # ===================== 启动 =====================
