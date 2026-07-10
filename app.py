@@ -11,7 +11,8 @@
   7. Session 安全配置
   8. 密码复杂度校验
   9. 模板变量转义
-  10. 文件上传安全加固（见下方 V14-V23）
+  10. 文件上传安全加固（V14-V25）
+  11. 越权和业务逻辑安全加固（V26-V30 见下方）
 """
 
 import os
@@ -288,14 +289,21 @@ def search():
 
 @app.route("/profile")
 def profile():
-    """个人中心 — 通过 URL 参数 user_id 查询任意用户资料"""
+    """个人中心 — 仅允许查看自己的资料"""
     if "username" not in session:
         return redirect("/login")
 
+    current_username = session["username"]
+    current_user = USERS.get(current_username)
+
     try:
-        user_id = int(request.args.get("user_id", 0))
+        user_id = int(request.args.get("user_id", current_user["id"]))
     except ValueError:
-        user_id = 0
+        abort(400)
+
+    # V26: 仅允许查看自己的资料
+    if current_user["id"] != user_id:
+        abort(403)
 
     user_data = find_user_by_id(user_id)
     if not user_data:
@@ -306,23 +314,48 @@ def profile():
 
 @app.route("/recharge", methods=["POST"])
 def recharge():
-    """充值 — 直接修改余额，不校验 amount 正负"""
+    """充值 — 仅允许给自己充值，校验金额"""
     if "username" not in session:
         return redirect("/login")
+
+    current_username = session["username"]
+    current_user = USERS.get(current_username)
 
     try:
         user_id = int(request.form.get("user_id", 0))
         amount = float(request.form.get("amount", 0))
     except (ValueError, TypeError):
-        return redirect("/profile?user_id=0")
+        abort(400)
+
+    # V27: 仅允许给自己充值
+    if current_user["id"] != user_id:
+        abort(403)
+
+    # V28: 金额必须为正
+    if amount <= 0:
+        return render_template("profile.html",
+                               user=find_user_by_id(user_id),
+                               error="充值金额必须大于 0")
+
+    # V29: 单次充值上限
+    if amount > 100000:
+        return render_template("profile.html",
+                               user=find_user_by_id(user_id),
+                               error="单次充值不能超过 100,000 元")
 
     # 查找用户并更新余额
     for u in USERS.values():
         if u["id"] == user_id:
-            u["balance"] = u["balance"] + amount
+            # V30: 余额上限 999999
+            new_balance = u["balance"] + amount
+            if new_balance > 999999:
+                return render_template("profile.html",
+                                       user=find_user_by_id(user_id),
+                                       error="余额已达上限 999,999 元")
+            u["balance"] = new_balance
             break
 
-    return redirect(f"/profile?user_id={user_id}")
+    return redirect(f"/profile")
 
 
 @app.route("/upload", methods=["GET", "POST"])
