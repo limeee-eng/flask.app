@@ -8,6 +8,7 @@ app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
 
 USERS = {
     "admin": {
+        "id": 1,
         "username": "admin",
         "password": "admin123",
         "role": "admin",
@@ -16,6 +17,7 @@ USERS = {
         "balance": 99999
     },
     "alice": {
+        "id": 2,
         "username": "alice",
         "password": "alice2025",
         "role": "user",
@@ -118,6 +120,44 @@ def search():
         finally:
             conn.close()
     return render_template("index.html", user_info=user_info, keyword=keyword, search_results=search_results)
+
+def find_user_by_id(user_id):
+    """根据 user_id 查找用户"""
+    for u in USERS.values():
+        if u["id"] == user_id:
+            return u
+    return None
+
+
+@app.route("/profile")
+def profile():
+    if "username" not in session:
+        return redirect("/login")
+    try:
+        user_id = int(request.args.get("user_id", 0))
+    except ValueError:
+        user_id = 0
+    user_data = find_user_by_id(user_id)
+    if not user_data:
+        return render_template("profile.html", error="用户不存在", user=None)
+    return render_template("profile.html", user=user_data, error=None)
+
+
+@app.route("/recharge", methods=["POST"])
+def recharge():
+    if "username" not in session:
+        return redirect("/login")
+    try:
+        user_id = int(request.form.get("user_id", 0))
+        amount = float(request.form.get("amount", 0))
+    except (ValueError, TypeError):
+        return redirect("/profile?user_id=0")
+    for u in USERS.values():
+        if u["id"] == user_id:
+            u["balance"] = u["balance"] + amount
+            break
+    return redirect(f"/profile?user_id={user_id}")
+
 
 @app.route("/upload", methods=["GET", "POST"])
 def upload():
