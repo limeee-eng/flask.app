@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="card">
+    <h2 class="card-title">个人中心</h2>
+
+    {% if error %}
+    <div class="alert alert-error">{{ error | e }}</div>
+    {% endif %}
+
+    {% if user %}
+    <ul class="info-list">
+        <li><span class="info-label">ID</span><span class="info-value">{{ user['id'] }}</span></li>
+        <li><span class="info-label">用户名</span><span class="info-value">{{ user['username'] | e }}</span></li>
+        <li><span class="info-label">邮箱</span><span class="info-value">{{ user['email'] | e }}</span></li>
+        <li><span class="info-label">手机</span><span class="info-value">{{ user['phone'] | e }}</span></li>
+        <li><span class="info-label">角色</span><span class="info-value">{{ user['role'] | e }}</span></li>
+        <li><span class="info-label">余额</span><span class="info-value">{{ user['balance'] }}</span></li>
+    </ul>
+
+    <div class="card" style="margin-top: 24px;">
+        <h3 style="font-size: 18px; font-weight: 600; margin-bottom: 16px;">充值</h3>
+        <form method="POST" action="/recharge">
+            <input type="hidden" name="user_id" value="{{ user['id'] }}">
+            <div class="form-group">
+                <label class="form-label" for="amount">充值金额</label>
+                <input class="form-input" type="number" id="amount" name="amount" step="0.01" placeholder="请输入充值金额" required>
+            </div>
+            <button type="submit" class="btn btn-block">立即充值</button>
+        </form>
+    </div>
+    {% endif %}
+</div>
+
+{% endblock %}

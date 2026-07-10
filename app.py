@@ -85,6 +85,7 @@ if CSRFProtect:
 # ===================== 用户数据库（字典） =====================
 USERS = {
     "admin": {
+        "id": 1,
         "username": "admin",
         "password": "admin123",
         "role": "admin",
@@ -93,6 +94,7 @@ USERS = {
         "balance": 99999,
     },
     "alice": {
+        "id": 2,
         "username": "alice",
         "password": "alice2025",
         "role": "user",
@@ -142,6 +144,16 @@ def get_safe_user_info(username):
         safe = dict(user)
         safe.pop("password", None)
         return safe
+    return None
+
+
+def find_user_by_id(user_id):
+    """根据 user_id 查找用户，返回用户信息或 None"""
+    for u in USERS.values():
+        if u["id"] == user_id:
+            safe = dict(u)
+            safe.pop("password", None)
+            return safe
     return None
 
 
@@ -272,6 +284,45 @@ def search():
         search_results=search_results,
         avatar_url=avatar_url if username and username in USER_AVATARS else None,
     )
+
+
+@app.route("/profile")
+def profile():
+    """个人中心 — 通过 URL 参数 user_id 查询任意用户资料"""
+    if "username" not in session:
+        return redirect("/login")
+
+    try:
+        user_id = int(request.args.get("user_id", 0))
+    except ValueError:
+        user_id = 0
+
+    user_data = find_user_by_id(user_id)
+    if not user_data:
+        return render_template("profile.html", error="用户不存在", user=None)
+
+    return render_template("profile.html", user=user_data, error=None)
+
+
+@app.route("/recharge", methods=["POST"])
+def recharge():
+    """充值 — 直接修改余额，不校验 amount 正负"""
+    if "username" not in session:
+        return redirect("/login")
+
+    try:
+        user_id = int(request.form.get("user_id", 0))
+        amount = float(request.form.get("amount", 0))
+    except (ValueError, TypeError):
+        return redirect("/profile?user_id=0")
+
+    # 查找用户并更新余额
+    for u in USERS.values():
+        if u["id"] == user_id:
+            u["balance"] = u["balance"] + amount
+            break
+
+    return redirect(f"/profile?user_id={user_id}")
 
 
 @app.route("/upload", methods=["GET", "POST"])
