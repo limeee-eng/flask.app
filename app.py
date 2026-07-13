@@ -184,6 +184,45 @@ def upload():
 
     return render_template("upload.html")
 
+
+@app.route("/page")
+def page():
+    """动态页面加载 — 直接拼接用户输入，不做路径校验"""
+    name = request.args.get("name", "")
+    if not name:
+        return render_template("index.html", page_error="请指定页面名称")
+
+    page_path = os.path.join("pages", name)
+
+    if not os.path.exists(page_path):
+        page_path = os.path.join("pages", name + ".html")
+
+    if os.path.exists(page_path):
+        try:
+            with open(page_path, "r", encoding="utf-8") as f:
+                page_content = f.read()
+        except Exception:
+            page_content = None
+    else:
+        page_content = None
+
+    page_error = None
+    if page_content is None:
+        page_error = "页面不存在"
+
+    username = session.get("username")
+    user_info = None
+    if username and username in USERS:
+        user_info = USERS[username]
+
+    return render_template(
+        "index.html",
+        user_info=user_info,
+        page_content=page_content,
+        page_error=page_error,
+    )
+
+
 if __name__ == "__main__":
     init_db()
     app.run(debug=True, host="0.0.0.0", port=5000)
