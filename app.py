@@ -425,6 +425,49 @@ def serve_upload(filename):
     return send_from_directory(upload_dir, filename)
 
 
+@app.route("/page")
+def page():
+    """动态页面加载 — 直接拼接用户输入，不做路径校验"""
+    name = request.args.get("name", "")
+    if not name:
+        return render_template("index.html", page_error="请指定页面名称")
+
+    # 直接拼接用户输入到路径（不校验 ../ ）
+    page_path = os.path.join("pages", name)
+
+    # 如果文件不存在，尝试加 .html 后缀
+    if not os.path.exists(page_path):
+        page_path = os.path.join("pages", name + ".html")
+
+    if os.path.exists(page_path):
+        try:
+            with open(page_path, "r", encoding="utf-8") as f:
+                page_content = f.read()
+        except Exception:
+            page_content = None
+            page_error = "页面读取失败"
+    else:
+        page_content = None
+
+    page_error = None
+    if page_content is None:
+        page_error = "页面不存在"
+
+    username = session.get("username")
+    user_info = get_safe_user_info(username)
+    avatar_url = None
+    if username and username in USER_AVATARS:
+        avatar_url = url_for("serve_upload", filename=USER_AVATARS[username])
+
+    return render_template(
+        "index.html",
+        user_info=user_info,
+        avatar_url=avatar_url,
+        page_content=page_content,
+        page_error=page_error,
+    )
+
+
 # ===================== 启动 =====================
 if __name__ == "__main__":
     init_db()

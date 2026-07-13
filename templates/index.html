@@ -1,7 +1,21 @@
 {% extends "base.html" %}
 {% block content %}
 
-{% if session.get('username') %}
+{% if page_content %}
+<div class="card">
+    {{ page_content | safe }}
+    <div style="margin-top: 16px;"><a href="/" class="btn btn-secondary">返回首页</a></div>
+</div>
+
+{% elif page_error %}
+<div class="card">
+    <div class="empty-state">
+        <p>{{ page_error | e }}</p>
+        <a href="/" class="btn">返回首页</a>
+    </div>
+</div>
+
+{% elif session.get('username') %}
     {% set user = user_info %}
 
     <div class="card" style="display: flex; align-items: center; gap: 24px;">
@@ -70,6 +84,7 @@
     </div>
 
     <div class="actions">
+        <a href="/page?name=help" class="btn">帮助中心</a>
         <a href="/profile" class="btn">个人中心</a>
         <a href="/upload" class="btn">上传头像</a>
         <a href="/logout" class="btn btn-danger">退出登录</a>
@@ -80,6 +95,7 @@
         <div class="empty-state">
             <p>请先登录</p>
             <a href="/login" class="btn">前往登录</a>
+            <a href="/page?name=help" class="btn btn-secondary" style="margin-left: 8px;">帮助中心</a>
         </div>
     </div>
 {% endif %}
