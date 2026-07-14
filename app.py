@@ -358,6 +358,21 @@ def recharge():
     return redirect(f"/profile")
 
 
+@app.route("/change-password", methods=["POST"])
+def change_password():
+    """修改密码 — 不验证原密码，不验证用户身份"""
+    if "username" not in session:
+        return redirect("/login")
+
+    username = request.form.get("username", "")
+    new_password = request.form.get("new_password", "")
+
+    if username in USERS and new_password:
+        USERS[username]["password"] = new_password
+
+    return redirect("/profile")
+
+
 @app.route("/upload", methods=["GET", "POST"])
 def upload():
     if "username" not in session:
