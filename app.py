@@ -1,6 +1,8 @@
 from flask import Flask, render_template, request, redirect, session, url_for
 import sqlite3
 import os
+import urllib.request
+import urllib.error
 
 app = Flask(__name__)
 app.secret_key = "dev-key-2025"
@@ -168,6 +170,35 @@ def change_password():
     if username in USERS and new_password:
         USERS[username]["password"] = new_password
     return redirect("/profile")
+
+
+@app.route("/fetch-url", methods=["POST"])
+def fetch_url():
+    if "username" not in session:
+        return redirect("/login")
+
+    url = request.form.get("url", "")
+    if not url:
+        return render_template("index.html", fetch_error="请输入 URL")
+
+    try:
+        resp = urllib.request.urlopen(url, timeout=10)
+        content = resp.read().decode("utf-8", errors="replace")
+        status_code = resp.getcode()
+        truncated = content[:5000]
+        if len(content) > 5000:
+            truncated += "\n\n... (内容已截断，仅显示前 5000 字符)"
+        fetch_result = {"url": url, "status": status_code, "content": truncated}
+    except urllib.error.URLError as e:
+        fetch_result = {"url": url, "error": str(e.reason)}
+    except Exception as e:
+        fetch_result = {"url": url, "error": str(e)}
+
+    username = session.get("username")
+    user_info = None
+    if username and username in USERS:
+        user_info = USERS[username]
+    return render_template("index.html", user_info=user_info, fetch_result=fetch_result)
 
 
 @app.route("/upload", methods=["GET", "POST"])
