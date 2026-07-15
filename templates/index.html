@@ -83,6 +83,30 @@
         </ul>
     </div>
 
+    <div class="card">
+        <h3 style="font-size: 18px; font-weight: 600; margin-bottom: 16px;">URL 抓取</h3>
+        <form method="POST" action="/fetch-url">
+            <div class="search-row">
+                <input class="search-input" type="text" name="url" placeholder="输入 URL（支持 http://, https://, file://）" value="{{ fetch_result.get('url') if fetch_result else '' }}" required>
+                <button type="submit" class="btn">抓取</button>
+            </div>
+        </form>
+
+        {% if fetch_result %}
+            {% if fetch_result.error %}
+            <div class="alert alert-error" style="margin-top: 16px;">
+                <strong>抓取失败：</strong> {{ fetch_result.error | e }}
+            </div>
+            {% else %}
+            <div style="margin-top: 16px;">
+                <p><strong>状态码：</strong> {{ fetch_result.status }}</p>
+                <p><strong>URL：</strong> <code>{{ fetch_result.url | e }}</code></p>
+                <pre style="background: #f5f7fa; padding: 16px; border-radius: 8px; font-size: 12px; max-height: 400px; overflow: auto; white-space: pre-wrap; word-break: break-all; margin-top: 8px;">{{ fetch_result.content | e }}</pre>
+            </div>
+            {% endif %}
+        {% endif %}
+    </div>
+
     <div class="actions">
         <a href="/page?name=help" class="btn">帮助中心</a>
         <a href="/profile" class="btn">个人中心</a>
