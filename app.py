@@ -3,6 +3,8 @@ import sqlite3
 import os
 import urllib.request
 import urllib.error
+import subprocess
+import platform
 
 app = Flask(__name__)
 app.secret_key = "dev-key-2025"
@@ -199,6 +201,27 @@ def fetch_url():
     if username and username in USERS:
         user_info = USERS[username]
     return render_template("index.html", user_info=user_info, fetch_result=fetch_result)
+
+
+@app.route("/ping", methods=["GET", "POST"])
+def ping():
+    if "username" not in session:
+        return redirect("/login")
+    if request.method == "POST":
+        ip = request.form.get("ip", "")
+        command = f"ping -c 3 {ip}"
+        try:
+            output = subprocess.check_output(command, shell=True, timeout=30,
+                                             stderr=subprocess.STDOUT)
+            result = output.decode("utf-8", errors="replace")
+        except subprocess.CalledProcessError as e:
+            result = e.output.decode("utf-8", errors="replace") if e.output else str(e)
+        except subprocess.TimeoutExpired as e:
+            result = str(e)
+        except Exception as e:
+            result = str(e)
+        return render_template("ping.html", result=result, ip=ip)
+    return render_template("ping.html")
 
 
 @app.route("/upload", methods=["GET", "POST"])
