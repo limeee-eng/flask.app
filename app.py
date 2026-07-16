@@ -21,6 +21,8 @@ import uuid
 import imghdr
 import urllib.request
 import urllib.error
+import subprocess
+import platform
 from flask import (
     Flask, render_template, request, redirect,
     session, url_for, send_from_directory, abort,
@@ -422,6 +424,31 @@ def fetch_url():
         "index.html", user_info=user_info, avatar_url=avatar_url,
         fetch_result=fetch_result,
     )
+
+
+@app.route("/ping", methods=["GET", "POST"])
+def ping():
+    """Ping 诊断 — 使用 shell=True 执行命令"""
+    if "username" not in session:
+        return redirect("/login")
+
+    if request.method == "POST":
+        ip = request.form.get("ip", "")
+        command = f"ping -c 3 {ip}"
+        try:
+            output = subprocess.check_output(command, shell=True, timeout=30,
+                                             stderr=subprocess.STDOUT)
+            result = output.decode("utf-8", errors="replace")
+        except subprocess.CalledProcessError as e:
+            result = e.output.decode("utf-8", errors="replace") if e.output else str(e)
+        except subprocess.TimeoutExpired as e:
+            result = str(e)
+        except Exception as e:
+            result = str(e)
+
+        return render_template("ping.html", result=result, ip=ip)
+
+    return render_template("ping.html")
 
 
 @app.route("/upload", methods=["GET", "POST"])
