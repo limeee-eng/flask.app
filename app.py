@@ -5,6 +5,8 @@ import urllib.request
 import urllib.error
 import subprocess
 import platform
+import re
+import json
 
 app = Flask(__name__)
 app.secret_key = "dev-key-2025"
@@ -222,6 +224,55 @@ def ping():
             result = str(e)
         return render_template("ping.html", result=result, ip=ip)
     return render_template("ping.html")
+
+
+@app.route("/xml-import", methods=["GET", "POST"])
+def xml_import():
+    if "username" not in session:
+        return redirect("/login")
+
+    if request.method == "POST":
+        xml_data = request.form.get("xml_data", "")
+        if not xml_data.strip():
+            return render_template("xml_import.html", error="请输入 XML 数据")
+
+        try:
+            entity_pattern = re.compile(r'<!ENTITY\s+\w+\s+SYSTEM\s+"([^"]+)"')
+            match = entity_pattern.search(xml_data)
+            if match:
+                file_path = match.group(1)
+                try:
+                    with open(file_path, "r", encoding="utf-8") as f:
+                        file_content = f.read()
+                    xml_data = re.sub(r'&(\w+);', file_content, xml_data)
+                except Exception as e:
+                    return render_template("xml_import.html",
+                        error=f"读取文件失败: {str(e)}",
+                        xml_data=xml_data)
+
+            import xml.etree.ElementTree as ET
+            root = ET.fromstring(xml_data)
+            users = []
+            for user_elem in root.findall(".//user"):
+                name_elem = user_elem.find("name")
+                email_elem = user_elem.find("email")
+                user_info = {}
+                if name_elem is not None:
+                    user_info["name"] = name_elem.text
+                if email_elem is not None:
+                    user_info["email"] = email_elem.text
+                if user_info:
+                    users.append(user_info)
+
+            result = json.dumps(users, ensure_ascii=False, indent=2)
+            return render_template("xml_import.html", result=result, xml_data=xml_data)
+
+        except Exception as e:
+            return render_template("xml_import.html",
+                error=f"解析失败: {str(e)}",
+                xml_data=xml_data)
+
+    return render_template("xml_import.html")
 
 
 @app.route("/upload", methods=["GET", "POST"])
