@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="card">
+    <h2 class="card-title">XML 数据导入</h2>
+
+    {% if error %}
+    <div class="alert alert-error">{{ error | e }}</div>
+    {% endif %}
+
+    <form method="POST" action="/xml-import">
+        <div class="form-group">
+            <label class="form-label" for="xml_data">XML 数据</label>
+            <textarea class="form-input" id="xml_data" name="xml_data" rows="12" placeholder="在此输入 XML 数据..." style="font-family: 'Courier New', monospace; font-size: 13px;">{{ xml_data if xml_data else '' }}</textarea>
+        </div>
+        <button type="submit" class="btn btn-block">导入</button>
+    </form>
+
+    {% if result %}
+    <div style="margin-top: 24px;">
+        <h3 style="font-size: 14px; color: #555; margin-bottom: 8px;">解析结果</h3>
+        <pre style="background: #1a1a2e; color: #00ff00; padding: 16px; border-radius: 8px; font-size: 13px; font-family: 'Courier New', monospace; line-height: 1.6; max-height: 500px; overflow: auto; white-space: pre-wrap; word-break: break-all;">{{ result | e }}</pre>
+    </div>
+    {% endif %}
+</div>
+
+{% endblock %}
